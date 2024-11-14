@@ -24,7 +24,7 @@ def get_total_pages() -> int:
 def get_item_urls() -> [str]:
     item_urls = []
 
-    for i in tqdm(range(1, get_total_pages() + 1), desc="Fetching all item urls", unit="page"):
+    for i in tqdm(range(1, get_total_pages() + 1), desc="Fetching item urls", unit="page"):
         response = requests.get(MAIN_SEARCH_URL + str(i))
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -34,6 +34,8 @@ def get_item_urls() -> [str]:
             item_urls.append(url)
 
     return item_urls
+
+
 
 
 if __name__ == "__main__":
