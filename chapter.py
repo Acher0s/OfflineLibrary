@@ -1,12 +1,21 @@
+import shutil
+
 from bs4 import BeautifulSoup
 import requests
 
+import imageutil
 import util
 
 
 class Chapter:
-    def __init__(self, chapter_url : str):
-        self.url = chapter_url
+    def __init__(self, chapter_url: str, initialize: bool = True):
+        self.url: str = chapter_url
+        self.image_urls: [str] = []
+
+        if initialize:
+            self.initialize()
+
+    def initialize(self):
         self.image_urls = self.scrape_img_urls()
 
     def scrape_img_urls(self):
@@ -19,25 +28,24 @@ class Chapter:
 
     def get_size(self):
         headers = {
-            "Referer": "https://manganato.com/"  # Set the Referer header to the specified domain
+            "Referer": "https://manganato.com/"
         }
 
         total = 0
 
-        for url in self.image_urls:
+        for i, url in enumerate(self.image_urls):
             response = requests.head(url, headers=headers)
-            print(response)
 
             if response.status_code == 200 and 'Content-Length' in response.headers:
                 size = int(response.headers['Content-Length'])
                 total += size
 
-            break
-
         return total
 
 
 if __name__ == "__main__":
-    c = Chapter("https://chapmanganato.to/manga-ay1003907/chapter-1")
+    c = Chapter("https://chapmanganato.to/manga-wo999471/chapter-4")
 
-    print(util.format_size(c.get_size()))
+    url = c.image_urls[7]
+    ext = url.split('.')[-1]
+    imageutil.download_image(url, f"./test/a.{ext}")
