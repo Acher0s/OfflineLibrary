@@ -1,12 +1,11 @@
 import re
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
 from cachetools import TTLCache
-from datetime import datetime
 
-from chapter import Chapter
-from metadata import *
+from models.metadata import *
 
 LAST_UPDATE_DATE_FORMAT = "%b %d,%Y - %H:%M"
 
@@ -20,7 +19,7 @@ class Item:
         self.url: str = item_url
         self.last_updated: datetime = datetime.min
         self.name = ""
-        self.chapters: [Chapter] = []
+        self.chapter_urls: [str] = []
         self.authors: [Author] = []
         self.genres: [Genre] = []
         self.views: int = 0
@@ -39,9 +38,6 @@ class Item:
         soup_cache[self.url] = soup
 
         return soup
-
-    def is_outdated(self) -> bool:
-        return self.last_updated < self.scrape_last_updated()
 
     def update_metadata(self):
         soup = self.get_soup()
@@ -71,10 +67,11 @@ class Item:
         self.rating = soup.find("em", {"property": "v:average"}).text
         self.votes = soup.find("em", {"property": "v:votes"}).text
 
+        self.last_updated = self.scrape_last_updated()
+
+
     def update_chapters(self):
-        if self.is_outdated():
-            chapter_urls = self.scrape_chapter_urls()
-            self.chapters = [Chapter(url) for url in chapter_urls]
+        self.chapter_urls = self.scrape_chapter_urls()
 
     def scrape_last_updated(self) -> datetime:
         soup = self.get_soup()
@@ -95,7 +92,7 @@ class Item:
         if chapters_div is not None:
             chapter_links = chapters_div.find_all('a', class_="chapter-name")
             chapter_urls = [link['href'] for link in chapter_links]
-            return chapter_urls
+            return list(chapter_urls.__reversed__())
         else:
             return []
 

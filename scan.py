@@ -1,15 +1,8 @@
-import time
-from threading import Thread
-
 from bs4 import BeautifulSoup
-import requests
-import re
-import threading
 from tqdm import tqdm
-import random
 
 from imageutil import *
-from item import Item
+from models.item import Item
 
 MAIN_SEARCH_URL = "https://manganato.com/genre-all/"
 LAST_PAGE_CLASS = "page-last"
@@ -56,50 +49,6 @@ def add_item_from_url(urls: [str], l: [Item]):
 
 
 if __name__ == "__main__":
-    random.seed(0)
+    item = Item("https://chapmanganato.to/manga-mp990098")
 
-    start_time = time.time()
-
-    pages = random.sample(range(1915), 1000)
-
-    total_uncompressed = 0
-    total_compressed = 0
-
-    i = 0
-    for page in pages:
-        item_urls = random.sample(get_item_urls(page), 2)
-
-        for item_url in item_urls:
-            item = Item(item_url)
-
-            try:
-                img_urls = []
-
-                for chapter in random.sample(item.chapters, 1):
-                    img_urls += random.sample(chapter.image_urls, 3)
-
-                for img_url in img_urls:
-                    ext = img_url.split(".")[-1]
-
-                    uncompressed_path = f"./uncompressed/{i}.{ext}"
-                    compressed_path = f"./compressed/{i}.heif"
-
-                    download_image(img_url, uncompressed_path)
-                    convert_to_heif(uncompressed_path, compressed_path, quality=20)
-
-                    total_uncompressed += os.path.getsize(uncompressed_path)
-                    total_compressed += os.path.getsize(compressed_path)
-
-                    print(i, img_url)
-                    print(total_compressed / total_uncompressed)
-                    i += 1
-            except:
-                print(f"Something went wrong, skipping {item_url}")
-
-
-
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-
-    print("Took {:.2f} seconds".format(elapsed_time))
+    print(item)

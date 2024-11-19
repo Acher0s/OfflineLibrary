@@ -8,15 +8,11 @@ import util
 
 
 class Chapter:
-    def __init__(self, chapter_url: str, initialize: bool = True):
+    def __init__(self, chapter_url: str):
         self.url: str = chapter_url
-        self.image_urls: [str] = []
+        self.name: str = chapter_url.split('/')[-1].strip()
+        self.image_urls: [str] = self.scrape_img_urls()
 
-        if initialize:
-            self.initialize()
-
-    def initialize(self):
-        self.image_urls = self.scrape_img_urls()
 
     def scrape_img_urls(self):
         response = requests.get(self.url)
@@ -42,10 +38,11 @@ class Chapter:
 
         return total
 
+    def __str__(self):
+        return ', '.join(f"{key}={value}" for key, value in self.__dict__.items())
+
 
 if __name__ == "__main__":
     c = Chapter("https://chapmanganato.to/manga-wo999471/chapter-4")
 
-    url = c.image_urls[7]
-    ext = url.split('.')[-1]
-    imageutil.download_image(url, f"./test/a.{ext}")
+    print(c)
