@@ -52,13 +52,16 @@ def add_item_from_url(urls: [str], l: [Item]):
 
 
 if __name__ == "__main__":
-    items = get_all_item_urls(15)
+    items = get_all_item_urls(2)
 
     for item in items:
         print(item)
-        item = Item(item)
-        with sqlite3.connect(DB_ADDRESS) as conn:
-            DB.save_item(item,conn)
+        try:
+            item = Item(item)
+            with sqlite3.connect(DB_ADDRESS) as conn:
+                DB.save_item(item,conn)
+        except:
+            print("something went wrong")
 
     print(items)
 
