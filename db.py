@@ -178,7 +178,7 @@ class DB:
 
             for i, chapter_url in enumerate(item.chapter_urls):
                 if (i, chapter_url) not in existing_chapters:
-                    cursor.execute('DELETE FROM item_chapters WHERE chapter_nr=?',(i,) )
+                    cursor.execute('DELETE FROM item_chapters WHERE chapter_nr=? AND item_url=?', (i, item.url))
 
                     chapter = Chapter(chapter_url)
                     DB.save_chapter(chapter, connection)
@@ -188,8 +188,7 @@ class DB:
 
 if __name__ == "__main__":
     DB.create()
-
-    it = Item("https://chapmanganato.to/manga-mp990098")
+    it4 = Item("https://chapmanganato.to/manga-ah1003442")
 
     with sqlite3.connect(DB_ADDRESS) as conn:
-        DB.save_item(it, connection=conn)
+        DB.save_item(it4, connection=conn)

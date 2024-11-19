@@ -1,6 +1,9 @@
+import sqlite3
+
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+from db import DB_ADDRESS, DB
 from imageutil import *
 from models.item import Item
 
@@ -49,6 +52,13 @@ def add_item_from_url(urls: [str], l: [Item]):
 
 
 if __name__ == "__main__":
-    item = Item("https://chapmanganato.to/manga-mp990098")
+    items = get_all_item_urls(15)
 
-    print(item)
+    for item in items:
+        print(item)
+        item = Item(item)
+        with sqlite3.connect(DB_ADDRESS) as conn:
+            DB.save_item(item,conn)
+
+    print(items)
+

@@ -53,6 +53,9 @@ class Item:
             url = el['href']
             if re.search("/author/", url):
                 author = Author(name=el.text, url=url, id=url.split('/')[-1])
+                if author.id == '':
+                    author.id = author.name
+
                 self.authors.append(author)
 
             if re.search("/genre-[0-9]+$", url):
@@ -101,7 +104,7 @@ class Item:
 
 
 if __name__ == "__main__":
-    url = "https://manganato.com/manga-sj995918"
+    url = "https://chapmanganato.to/manga-ah1003442"
 
     item = Item(url)
 
