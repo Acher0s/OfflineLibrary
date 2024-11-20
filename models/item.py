@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from cachetools import TTLCache
 
+import util
 from models.metadata import *
 
 LAST_UPDATE_DATE_FORMAT = "%b %d,%Y - %H:%M"
@@ -23,7 +24,7 @@ class Item:
         self.authors: [Author] = []
         self.genres: [Genre] = []
         self.views: int = 0
-        self.rating: int = 0
+        self.rating: float = 0
         self.votes: int = 0
 
         self.update_metadata()
@@ -62,16 +63,15 @@ class Item:
                 genre = Genre(name=el.text, url=url, id=int(re.findall("[0-9]+$", url)[-1]))
                 self.genres.append(genre)
 
-        self.views = (soup
-                      .find('div', class_='panel-story-info')
-                      .find('div', class_='story-info-right-extent')
-                      .find_all('span', class_='stre-value'))[1].text
+        self.views = util.parse_to_integer((soup
+                                            .find('div', class_='panel-story-info')
+                                            .find('div', class_='story-info-right-extent')
+                                            .find_all('span', class_='stre-value'))[1].text)
 
-        self.rating = soup.find("em", {"property": "v:average"}).text
-        self.votes = soup.find("em", {"property": "v:votes"}).text
+        self.rating = float(soup.find("em", {"property": "v:average"}).text)
+        self.votes = int(soup.find("em", {"property": "v:votes"}).text)
 
         self.last_updated = self.scrape_last_updated()
-
 
     def update_chapters(self):
         self.chapter_urls = self.scrape_chapter_urls()
