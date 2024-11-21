@@ -1,10 +1,5 @@
-import shutil
-
 from bs4 import BeautifulSoup
 import requests
-
-import imageutil
-import util
 
 
 class Chapter:

@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from cachetools import TTLCache
 
-import util
+from util import util
 from models.metadata import *
 
 LAST_UPDATE_DATE_FORMAT = "%b %d,%Y - %H:%M"

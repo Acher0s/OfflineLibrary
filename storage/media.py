@@ -13,7 +13,7 @@ def store_object(bucket_name: str, object_name: str, object_path: str):
     try:
         client.fput_object(bucket_name, object_name, object_path)
     except S3Error as e:
-        print("Error occurred:", e)
+        print("Error occurred, couldn't save object:", e)
 
 def get_object(bucket_name: str, object_name: str, destination: str):
     client = get_client()
@@ -32,4 +32,5 @@ def get_client():
                  )
 
 if __name__ == "__main__":
-    ...
+    store_object("mangalib.thumbnails", "test", "../thumbnail.heif")
+    # get_object("mangalib.thumbnails", "thumbnail_manga-ah1003442.heif", "../retrieved.heif")

@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from storage.db import DB
-from imageutil import *
+from util.imageutil import *
 from models.item import Item
 
 MAIN_SEARCH_URL = "https://manganato.com/genre-all/"
