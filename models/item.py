@@ -19,13 +19,18 @@ class Item:
     def __init__(self, item_url: str):
         self.url: str = item_url
         self.last_updated: datetime = datetime.min
+        self.thumbnail_url: str = ""
         self.name = ""
-        self.chapter_urls: [str] = []
-        self.authors: [Author] = []
-        self.genres: [Genre] = []
+        self.description = ""
+        self.status: str = ""
+
         self.views: int = 0
         self.rating: float = 0
         self.votes: int = 0
+
+        self.chapter_urls: [str] = []
+        self.authors: [Author] = []
+        self.genres: [Genre] = []
 
         self.update_metadata()
         self.update_chapters()
@@ -63,15 +68,16 @@ class Item:
                 genre = Genre(name=el.text, url=url, id=int(re.findall("[0-9]+$", url)[-1]))
                 self.genres.append(genre)
 
-        self.views = util.parse_to_integer((soup
-                                            .find('div', class_='panel-story-info')
-                                            .find('div', class_='story-info-right-extent')
-                                            .find_all('span', class_='stre-value'))[1].text)
+        self.description = self.scrape_description()
+        self.views = self.scrape_views()
 
         self.rating = float(soup.find("em", {"property": "v:average"}).text)
         self.votes = int(soup.find("em", {"property": "v:votes"}).text)
 
         self.last_updated = self.scrape_last_updated()
+
+        self.thumbnail_url = self.scrape_thumbnail_url()
+        self.status = self.scrape_status()
 
     def update_chapters(self):
         self.chapter_urls = self.scrape_chapter_urls()
@@ -86,6 +92,33 @@ class Item:
         parsed_date = datetime.strptime(date_string, LAST_UPDATE_DATE_FORMAT)
 
         return parsed_date
+
+    def scrape_status(self):
+        return (self.get_soup()
+                .find('div', class_='panel-story-info')
+                .find('div', class_='story-info-right')
+                .find_all('tr')[2].find('td', class_="table-value").text
+                )
+
+    def scrape_views(self) -> int:
+        views = util.parse_to_integer((self.get_soup()
+                                       .find('div', class_='panel-story-info')
+                                       .find('div', class_='story-info-right-extent')
+                                       .find_all('span', class_='stre-value'))[1].text)
+        return views
+
+    def scrape_thumbnail_url(self):
+        return (
+            self.get_soup().find('div', class_="panel-story-info")
+            .find('span', class_="info-image")
+            .find('img')['src']
+        )
+
+    def scrape_description(self):
+        div = (self.get_soup().find('div', class_="panel-story-info")
+               .find('div', class_="panel-story-info-description"))
+
+        return ''.join(div.find_all(string=True, recursive=False)).strip()
 
     def scrape_chapter_urls(self) -> [str]:
         soup = self.get_soup()
@@ -111,3 +144,4 @@ if __name__ == "__main__":
     print(item)
     print([str(g) for g in item.genres])
     print([str(g) for g in item.authors])
+    print(item.status)

@@ -6,7 +6,9 @@ from models.metadata import Author, Genre
 
 import psycopg2
 
-DB_ADDRESS = 'data.db'
+from dotenv import load_dotenv
+import os
+
 
 
 class DB:
@@ -53,6 +55,9 @@ class DB:
                             item_url TEXT PRIMARY KEY,
                             last_updated TEXT,
                             name TEXT,
+                            status TEXT,
+                            description TEXT,
+                            thumbnail_url TEXT,
                             views INTEGER,
                             rating INTEGER,
                             votes INTEGER
@@ -153,15 +158,19 @@ class DB:
         outdated = DB.is_item_outdated(item, connection)
 
         cursor.execute('''
-                    INSERT INTO items (item_url, last_updated, name, views, rating, votes)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    ON CONFLICT(item_url) DO UPDATE SET
-                        last_updated = excluded.last_updated,
-                        name = excluded.name,
-                        views = excluded.views,
-                        rating = excluded.rating,
-                        votes = excluded.votes
-                ''', (item.url, item.last_updated.isoformat(), item.name, item.views, item.rating, item.votes))
+            INSERT INTO items (item_url, last_updated, name, status, description, thumbnail_url, views, rating, votes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT(item_url) DO UPDATE SET
+                last_updated = excluded.last_updated,
+                name = excluded.name,
+                status = excluded.status,
+                description = excluded.description,
+                thumbnail_url = excluded.thumbnail_url,
+                views = excluded.views,
+                rating = excluded.rating,
+                votes = excluded.votes
+                ''', (item.url, item.last_updated.isoformat(), item.name, item.status, item.description,
+                      item.thumbnail_url, item.views, item.rating, item.votes))
 
         cursor.execute('DELETE FROM item_authors WHERE item_url = %s', (item.url,))
         for author in item.authors:
@@ -188,16 +197,16 @@ class DB:
 
     @staticmethod
     def get_connection():
+        load_dotenv()
 
         try:
-            conn = psycopg2.connect(
-                dbname="mangalib",
-                user="server",
-                password="Server1806",
-                host="192.168.100.125",
-                port="5432"
+            return psycopg2.connect(
+                dbname=os.environ['DB_NAME'],
+                user=os.environ['DB_USER'],
+                password=os.environ['DB_PASSWORD'],
+                host=os.environ['DB_ADDR'],
+                port=os.environ['DB_PORT']
             )
-            return conn
 
         except psycopg2.OperationalError as e:
             raise RuntimeError("Couldn't connect to database: " + str(e))

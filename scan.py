@@ -1,9 +1,7 @@
-import sqlite3
-
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from db import DB_ADDRESS, DB
+from storage.db import DB
 from imageutil import *
 from models.item import Item
 
@@ -60,7 +58,7 @@ if __name__ == "__main__":
         print(item)
         try:
             item = Item(item)
-            with sqlite3.connect(DB_ADDRESS) as conn:
+            with DB.get_connection() as conn:
                 DB.save_item(item, conn)
         except:
             print("something went wrong")
