@@ -60,8 +60,8 @@ if __name__ == "__main__":
             item = Item(item)
             with DB.get_connection() as conn:
                 DB.save_item(item, conn)
-        except:
-            print("something went wrong")
+        except Exception as e:
+            print("something went wrong: " + str(e))
 
     print(items)
 
