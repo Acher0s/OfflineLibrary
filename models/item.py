@@ -21,6 +21,7 @@ class Item:
         self.last_updated: datetime = datetime.min
         self.thumbnail_url: str = ""
         self.name = ""
+        self.alternative = ""
         self.description = ""
         self.status: str = ""
 
@@ -77,7 +78,11 @@ class Item:
         self.last_updated = self.scrape_last_updated()
 
         self.thumbnail_url = self.scrape_thumbnail_url()
-        self.status = self.scrape_status()
+
+        table = self.scrape_table()
+
+        self.status = table.get('status').lower()
+        self.alternative = table.get('alternative')
 
     def update_chapters(self):
         self.chapter_urls = self.scrape_chapter_urls()
@@ -93,12 +98,7 @@ class Item:
 
         return parsed_date
 
-    def scrape_status(self):
-        return (self.get_soup()
-                .find('div', class_='panel-story-info')
-                .find('div', class_='story-info-right')
-                .find_all('tr')[2].find('td', class_="table-value").text
-                )
+
 
     def scrape_views(self) -> int:
         views = util.parse_to_integer((self.get_soup()
@@ -132,16 +132,42 @@ class Item:
         else:
             return []
 
+    def scrape_table(self) -> {str: str}:
+        soup = self.get_soup()
+
+        table = soup.find('table', class_='variations-tableInfo')
+
+        data = {}
+
+        for row in table.find_all('tr'):
+            label = row.find('td', class_='table-label').get_text(strip=True).replace(':', '').lower().strip()
+            value_tag = row.find('td', class_='table-value')
+
+            if value_tag.find('h2'):
+                value = value_tag.find('h2').get_text(strip=True)
+            elif value_tag.find_all('a'):  # Check if the value contains multiple links.
+                value = ' - '.join(link.get_text(strip=True) for link in value_tag.find_all('a'))
+            else:
+                value = value_tag.get_text(strip=True)
+
+            # Add to the dictionary.
+            data[label] = value
+
+        return data
+
     def __str__(self):
         return ', '.join(f"{key}={value}" for key, value in self.__dict__.items())
 
 
 if __name__ == "__main__":
-    url = "https://chapmanganato.to/manga-ah1003442"
+    url = "https://chapmanganato.to/manga-uk951819"
 
     item = Item(url)
 
-    print(item)
-    print([str(g) for g in item.genres])
-    print([str(g) for g in item.authors])
-    print(item.status)
+    print(item.scrape_table())
+
+    #
+    # print(item)
+    # print([str(g) for g in item.genres])
+    # print([str(g) for g in item.authors])
+    # print(item.status)

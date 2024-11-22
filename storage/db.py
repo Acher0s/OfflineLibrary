@@ -58,6 +58,7 @@ class DB:
                             item_url TEXT PRIMARY KEY,
                             last_updated TEXT,
                             name TEXT,
+                            alternative TEXT,
                             status TEXT,
                             description TEXT,
                             thumbnail_object_name TEXT,
@@ -194,8 +195,9 @@ class DB:
         thumbnail_object_name = f"thumbnail_{item.url.split('/')[-1]}.heif"
 
         cursor.execute('''
-            INSERT INTO items (item_url, last_updated, name, status, description, thumbnail_object_name, views, rating, votes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO items (item_url, last_updated, name, alternative, status, description, thumbnail_object_name, 
+                                views, rating, votes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT(item_url) DO UPDATE SET
                 last_updated = excluded.last_updated,
                 name = excluded.name,
@@ -205,8 +207,8 @@ class DB:
                 views = excluded.views,
                 rating = excluded.rating,
                 votes = excluded.votes
-                ''', (item.url, item.last_updated.isoformat(), item.name, item.status, item.description,
-                      thumbnail_object_name, item.views, item.rating, item.votes))
+                ''', (item.url, item.last_updated.isoformat(), item.name, item.alternative, item.status,
+                      item.description, thumbnail_object_name, item.views, item.rating, item.votes))
 
         cursor.execute('DELETE FROM item_authors WHERE item_url = %s', (item.url,))
         for author in item.authors:
@@ -253,10 +255,7 @@ class DB:
 
 if __name__ == "__main__":
     with DB.get_connection() as conn:
-        it = Item("https://chapmanganato.to/manga-xu1001055")
-        print(DB.is_thumbnail_in_db(it, conn))
-
         DB.create()
-
+        it = Item("https://chapmanganato.to/manga-uk951819")
         DB.save_item(it, connection=conn)
 
