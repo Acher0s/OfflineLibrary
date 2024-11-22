@@ -215,11 +215,6 @@ class DB:
 if __name__ == "__main__":
     with DB.get_connection() as conn:
         DB.create()
-        it4 = Item("https://chapmanganato.to/manga-ah1003442")
+        it4 = Item("https://chapmanganato.to/manga-uk951819")
         DB.save_item(it4, connection=conn)
 
-    # DB.create()
-    # it4 = Item("https://chapmanganato.to/manga-ah1003442")
-    #
-    # with sqlite3.connect(DB_ADDRESS) as conn:
-    #     DB.save_item(it4, connection=conn)
