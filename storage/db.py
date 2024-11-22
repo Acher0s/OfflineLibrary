@@ -5,10 +5,13 @@ from models.item import Item
 from models.metadata import Author, Genre
 
 import psycopg2
+import tempfile
 
 from dotenv import load_dotenv
 import os
 
+from storage.media import store_object
+from util.imageutil import download_image, convert_to_heif
 
 
 class DB:
@@ -57,7 +60,7 @@ class DB:
                             name TEXT,
                             status TEXT,
                             description TEXT,
-                            thumbnail_url TEXT,
+                            thumbnail_object_name TEXT,
                             views INTEGER,
                             rating INTEGER,
                             votes INTEGER
@@ -122,6 +125,7 @@ class DB:
     @staticmethod
     def save_chapter(chapter: Chapter, connection):
         cursor = connection.cursor()
+        print(chapter.name)
 
         cursor.execute('''
             INSERT INTO chapters (chapter_url, name)
@@ -152,25 +156,57 @@ class DB:
         return item.last_updated > db_last_updated
 
     @staticmethod
+    def upload_thumbnail(item: Item, object_name: str):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ext = item.thumbnail_url.split('.')[-1]
+
+            original_dest = f"{temp_dir}/original.{ext}"
+            compressed_dest = f"{temp_dir}/compressed.heif"
+
+            download_image(item.thumbnail_url, original_dest)
+            convert_to_heif(original_dest, compressed_dest, quality=40)
+
+            store_object("mangalib.thumbnail", object_name, compressed_dest)
+
+
+    @staticmethod
+    def is_thumbnail_in_db(item: Item, connection):
+        cursor = connection.cursor()
+
+        query = '''
+                        SELECT thumbnail_object_name
+                        FROM items
+                        WHERE item_url = %s
+                    '''
+
+        cursor.execute(query, (item.url,))
+        result = cursor.fetchone()
+
+        return result is not None
+
+
+    @staticmethod
     def save_item(item: Item, connection):
         cursor = connection.cursor()
 
         outdated = DB.is_item_outdated(item, connection)
+        thumbnail_in_db = DB.is_thumbnail_in_db(item, connection)
+        thumbnail_object_name = f"thumbnail_{item.url.split('/')[-1]}.heif"
 
         cursor.execute('''
-            INSERT INTO items (item_url, last_updated, name, status, description, thumbnail_url, views, rating, votes)
+            INSERT INTO items (item_url, last_updated, name, status, description, thumbnail_object_name, views, rating, votes)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT(item_url) DO UPDATE SET
                 last_updated = excluded.last_updated,
                 name = excluded.name,
                 status = excluded.status,
                 description = excluded.description,
-                thumbnail_url = excluded.thumbnail_url,
+                thumbnail_object_name = excluded.thumbnail_object_name,
                 views = excluded.views,
                 rating = excluded.rating,
                 votes = excluded.votes
                 ''', (item.url, item.last_updated.isoformat(), item.name, item.status, item.description,
-                      item.thumbnail_url, item.views, item.rating, item.votes))
+                      thumbnail_object_name, item.views, item.rating, item.votes))
 
         cursor.execute('DELETE FROM item_authors WHERE item_url = %s', (item.url,))
         for author in item.authors:
@@ -181,6 +217,9 @@ class DB:
         for genre in item.genres:
             DB.save_genre(genre, connection)
             cursor.execute('INSERT INTO item_genres (item_url, genre_id) VALUES (%s, %s)', (item.url, genre.id))
+
+        if not thumbnail_in_db:
+            DB.upload_thumbnail(item, thumbnail_object_name)
 
         if outdated:
             cursor.execute('SELECT chapter_nr, chapter_url FROM item_chapters WHERE item_url = %s', (item.url,))
@@ -214,7 +253,10 @@ class DB:
 
 if __name__ == "__main__":
     with DB.get_connection() as conn:
+        it = Item("https://chapmanganato.to/manga-xu1001055")
+        print(DB.is_thumbnail_in_db(it, conn))
+
         DB.create()
-        it4 = Item("https://chapmanganato.to/manga-uk951819")
-        DB.save_item(it4, connection=conn)
+
+        DB.save_item(it, connection=conn)
 

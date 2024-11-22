@@ -68,18 +68,9 @@ def convert_to_webp(input_path: str, output_path: str, quality: int = 90, lossle
 
 
 if __name__ == "__main__":
+    url = "https://avt.mkklcdnv6temp.com/9/w/25-1638293846.jpg"
+    dest = "../thumbnail.jpg"
 
-    directory = "./images/"
-    files = [entry.name for entry in os.scandir(directory) if entry.is_file()]
+    download_image(url, dest)
+    convert_to_heif(dest, "../thumbnail.heif", quality=40)
 
-    for file in files:
-        if re.search("^[0-9]+\\.webp$", file):
-            print(file)
-            name, extension = os.path.splitext(file)
-
-            input_image = directory + file
-            heif_output = directory + name + ".heif"
-            webp_output = directory + name + "b.webp"
-
-            convert_to_heif(input_image, heif_output, quality=20)
-            convert_to_webp(input_image, webp_output, quality=10)
