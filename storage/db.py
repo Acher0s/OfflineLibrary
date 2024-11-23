@@ -63,7 +63,7 @@ class DB:
                             description TEXT,
                             thumbnail_object_name TEXT,
                             views INTEGER,
-                            rating INTEGER,
+                            rating FLOAT,
                             votes INTEGER
                         )
                     ''')
@@ -213,12 +213,14 @@ class DB:
         cursor.execute('DELETE FROM item_authors WHERE item_url = %s', (item.url,))
         for author in item.authors:
             DB.save_author(author, connection)
-            cursor.execute('INSERT INTO item_authors (item_url, author_id) VALUES (%s, %s)', (item.url, author.id))
+            cursor.execute('''INSERT INTO item_authors (item_url, author_id) VALUES (%s, %s)
+                            ON CONFLICT (item_url, author_id) DO NOTHING''', (item.url, author.id))
 
         cursor.execute('DELETE FROM item_genres WHERE item_url = %s', (item.url,))
         for genre in item.genres:
             DB.save_genre(genre, connection)
-            cursor.execute('INSERT INTO item_genres (item_url, genre_id) VALUES (%s, %s)', (item.url, genre.id))
+            cursor.execute('''INSERT INTO item_genres (item_url, genre_id) VALUES (%s, %s) 
+                                ON CONFLICT (item_url, genre_id) DO NOTHING''', (item.url, genre.id))
 
         if not thumbnail_in_db:
             DB.upload_thumbnail(item, thumbnail_object_name)

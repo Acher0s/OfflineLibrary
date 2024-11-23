@@ -4,6 +4,13 @@ from tqdm import tqdm
 from storage.db import DB
 from util.imageutil import *
 from models.item import Item
+import logging
+
+logging.basicConfig(
+    filename='scan.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'  # Log format
+)
 
 MAIN_SEARCH_URL = "https://manganato.com/genre-all/"
 LAST_PAGE_CLASS = "page-last"
@@ -48,20 +55,30 @@ def add_item_from_url(urls: [str], l: [Item]):
     for url in urls:
         l.append(Item(url))
 
+def add_all_to_db():
+    item_urls = get_all_item_urls()
+
+    for url in item_urls:
+        print(url)
+        try:
+            item = Item(url)
+        except Exception as e:
+            logging.error(f"Couldn't scrape {url}, {e}", exc_info=True)
+            print(f"Couldn't scrape {url}, {e}")
+            pass
+
+        try:
+            with DB.get_connection() as conn:
+                DB.save_item(item, conn)
+        except Exception as e:
+            logging.error(f"Couldn't save {url}, {e}, item: {Item}", exc_info=True)
+            print(f"Couldn't save {url}, {e}, item: {Item}")
+            pass
+
 
 if __name__ == "__main__":
     DB.create()
 
-    items = get_all_item_urls()
+    add_all_to_db()
 
-    for item in items:
-        print(item)
-        try:
-            item = Item(item)
-            with DB.get_connection() as conn:
-                DB.save_item(item, conn)
-        except Exception as e:
-            print("something went wrong: " + str(e))
-
-    print(items)
 

@@ -160,14 +160,11 @@ class Item:
 
 
 if __name__ == "__main__":
-    url = "https://chapmanganato.to/manga-uk951819"
+    url = "https://chapmanganato.to/manga-ay1003481"
 
     item = Item(url)
 
-    print(item.scrape_table())
-
-    #
-    # print(item)
-    # print([str(g) for g in item.genres])
-    # print([str(g) for g in item.authors])
-    # print(item.status)
+    print(item)
+    print([str(g) for g in item.genres])
+    print([str(g) for g in item.authors])
+    print(item.status)

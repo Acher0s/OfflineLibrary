@@ -12,10 +12,15 @@ class Chapter:
     def scrape_img_urls(self):
         response = requests.get(self.url)
         soup = BeautifulSoup(response.text, 'html.parser')
+        img_urls = []
 
-        imgs_urls = [el['src'] for el in soup.find('div', class_="container-chapter-reader").find_all('img')]
+        container = soup.find('div', class_="container-chapter-reader")
+        if container is not None:
+            img_urls = [el['src'] for el in container.find_all('img')]
+        else:
+            exit(5)
 
-        return imgs_urls
+        return img_urls
 
     def get_size(self):
         headers = {
