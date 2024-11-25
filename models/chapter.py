@@ -1,5 +1,13 @@
 from bs4 import BeautifulSoup
 import requests
+import logging
+
+
+logging.basicConfig(
+    filename='scan.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'  # Log format
+)
 
 
 class Chapter:
@@ -18,7 +26,7 @@ class Chapter:
         if container is not None:
             img_urls = [el['src'] for el in container.find_all('img')]
         else:
-            exit(5)
+            logging.error(f"Couldn't scrape chapter {self.url}", exc_info=True)
 
         return img_urls
 
